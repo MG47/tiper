@@ -1,21 +1,17 @@
-/* LICENSE INFO: TBD*/
+/*
+* tiper - main
+*/
 
-/* tiper - text editor */
-
-/* */
-
-#include "utilbox.h"
-
-#define TOOL_NAME "tiper"
+#include "tiper.h"
 
 #define DEBUG_ON
 
 static FILE *stream;
 
 //TODO Make a struct for these
-static unsigned int maxrow, maxcol;
-static unsigned int row, col;
-static unsigned int current_page;
+unsigned int maxrow, maxcol;
+unsigned int row, col;
+unsigned int current_page;
 
 /* TODO Remove limits */
 #define BUFFER_LINES 300
@@ -38,7 +34,7 @@ static void usage()
 {
 	printf("tiper:\n");
 	printf("Usage: "
-		"./tiper [OPTIONS] [FILE]\n"
+		"tiper [OPTIONS] [FILE]\n"
 		"OPTIONS:\n"
 		"-h - Usage\n"
 		"-v - Version\n"); 
@@ -46,36 +42,9 @@ static void usage()
 
 static void print_version()
 {
-	printf("%s version:%d.%d\n",TOOL_NAME, TIPER_VERSION, TIPER_REVISION);
+	printf("Tiper version:%d.%d\n", TIPER_VERSION, TIPER_REVISION);
 }
 
-static void clear_screen()
-{
-	const char* CLEAR_SCREEN_ANSI =  "\e[2J\e[H";
-	write(STDOUT_FILENO, CLEAR_SCREEN_ANSI, 7);
-}
-
-static void signal_handler(int signo)
-{
-	if (signo == SIGINT) {
-		erase();
-		refresh();
-		endwin();
-		clear_screen();
-		exit(EXIT_FAILURE);
-	}
-
-	if (signo = SIGWINCH) {
-		//TODO Handle resize gracefully
-	}
-}
-
-#if 0
-static void resize_handler(int sig)
-{
-	// handle SIGWINCH
-}
-#endif
 
 static FILE *create_new_file()
 {
@@ -154,31 +123,7 @@ static void print_cursor_info()
 	refresh();
 }
 
-static void print_menu()
-{
-	attron(A_REVERSE);
-	mvprintw(maxrow + 1, maxcol / 4, "Tiper Text Editor (%d.%d)\n", TIPER_VERSION, TIPER_REVISION);
-	mvprintw(maxrow + 2, maxcol / 4, "Shortcuts");
-	mvprintw(maxrow + 1, maxcol / 2, "Save and Exit: Ctrl+x");
-	mvprintw(maxrow + 2, maxcol / 2, "Save: Ctrl+i");
-	mvprintw(maxrow + 1,  (maxcol * 3.0) / 4, "Exit: Ctrl+c");
-	attroff(A_REVERSE);
-}
-
-static void init_console()
-{
-	int max_length;
-	initscr();
-	cbreak();
-	noecho();
-	keypad(stdscr, TRUE);
-	getmaxyx(stdscr, max_length, maxcol);
-	maxrow = max_length - 3;
-	print_menu();
-	refresh();
-}
-
-static void print_contents(unsigned int page_no) 
+void print_contents(unsigned int page_no) 
 {
 	clear();
 	unsigned int i;
@@ -453,7 +398,7 @@ static void process_input(int read)
 	}
 }
 
-int tiper_main(int argc, char **argv)
+int main(int argc, char **argv)
 {
 	int opt;
 	char *file_string;	
@@ -461,7 +406,6 @@ int tiper_main(int argc, char **argv)
 
 	printf("\nTiper Text Editor :\n");
 	if (argc > 2) {
-		/* TODO : create a file named 'untitled' instead of usage */
 		usage();
 		return 0;
 	}
@@ -487,15 +431,9 @@ int tiper_main(int argc, char **argv)
 	if (!stream)
 		return 0;
 
-	if (signal(SIGINT, signal_handler) == SIG_ERR) {
-		printf("Error: Cannot handle signal SIGNINT");
-		return 0;
-	}
+	/* Initialize Signals */
 
-	if (signal(SIGWINCH, signal_handler) == SIG_ERR) {
-		printf("Error: Cannot handle signal SIGNINT");
-		return 0;
-	}
+	init_signals();
 
 	current_page = 0;
 	init_console();
