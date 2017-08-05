@@ -1,34 +1,22 @@
 /*
-* tiper - main
+* tiper.c - main
 */
 
 #include "tiper.h"
 
 #define DEBUG_ON
 
-static FILE *stream;
 
 //TODO Make a struct for these
 unsigned int maxrow, maxcol;
 unsigned int row, col;
 unsigned int current_page;
 
-/* TODO Remove limits */
-#define BUFFER_LINES 300
-#define BUFFER_COLUMNS 80
 
 #ifndef CTRL
 #define CTRL(x) ((x) & 0x1f)
 #endif
 
-struct file_buffer {
-	char **buf;
-	unsigned int buffer_lines;
-};
-/* Lock buffer */
-static struct file_buffer buffer;
-
-static int new_file_flag;
 
 static void usage()
 {
@@ -43,75 +31,6 @@ static void usage()
 static void print_version()
 {
 	printf("Tiper version:%d.%d\n", TIPER_VERSION, TIPER_REVISION);
-}
-
-
-static FILE *create_new_file()
-{
-	int fd;
-	char *new_filename = "untitled";
-
-	fd = open(new_filename, O_RDWR | O_CREAT | O_TRUNC | O_EXCL, 0644);
-	if (fd == -1) {
-		if (errno == EEXIST)
-			printf("file named 'untitled' already exists\n");
-		return NULL;
-	}
-
-	stream = fdopen(fd, "r+");
-	if (!stream) {
-		printf("error: %s\n", strerror(errno));
-		return NULL;
-	}
-
-	buffer.buf = (char **)malloc(sizeof(char *));
-	buffer.buf[0] = malloc(sizeof(char) * BUFFER_COLUMNS);
-	buffer.buffer_lines = 1;
-	new_file_flag = 1;
-	return stream;
-}
-
-static FILE *parse_file(char *filename)
-{
-	unsigned int i;
-	int new_file = 0;
-	int fd;
-
-	stream = fopen(filename, "r+");
-	if (!stream) { 
-		fd = open(filename, O_RDWR | O_CREAT | O_TRUNC, 0644);
-		stream = fdopen(fd, "r+");
-		if (!stream) {
-			printf("error: %s\n", strerror(errno));
-			return NULL;
-		}
-		new_file = 1;
-	}
-
-	/* TODO need to fix allocation for scrolling*/
-	i = 0;
-	buffer.buf = (char **)malloc(BUFFER_LINES * sizeof(char *));
-	for (i = 0; i < BUFFER_LINES; i++) {
-		buffer.buf[i] = malloc(sizeof(char) * BUFFER_COLUMNS);
-	}
-
-	if (new_file) {
-		buffer.buffer_lines = 1;
-		return stream;
-	}
-
-	i = 0;
-	/* TODO : add critical maxrow & maxcolumn check */
-	/* TODO : add rows dyanmically with fgets */
-	while ((i < BUFFER_LINES) && (fgets(buffer.buf[i], BUFFER_COLUMNS, stream) != NULL))
-		i++;
-	/* TODO : fix limit*/
-	if (i >= BUFFER_LINES - 1)
-		exit(EXIT_FAILURE);
-
-
-	buffer.buffer_lines = i + 1;
-	return stream;
 }
 
 static void print_cursor_info()
@@ -140,31 +59,6 @@ void print_contents(unsigned int page_no)
 	print_menu();
 }
 
-static void save_to_file()
-{
-	//TODO add newline at end
-	//TODO mvprintw saved to file//
-	unsigned int i;
-	fseek(stream, 0, SEEK_SET);
-	for (i = 0; i < buffer.buffer_lines; i++) {
-		fputs(buffer.buf[i], stream);
-	}
-	fflush(stream);
-
-	//TODO ask new file name
-//	if (new_file_flag)
-
-}
-
-static void save_and_exit()
-{
-	save_to_file();
-	erase();
-	refresh();
-	endwin();
-	clear_screen();
-	exit(EXIT_SUCCESS);
-}
 
 static void insert_char_at(char *str, int index, char ch)
 {
@@ -176,66 +70,6 @@ static void insert_char_at(char *str, int index, char ch)
 	for (i = strlen(src); i > index; i--)
 		src[i] = src[i - 1];
 	src[index] = ch;
-}
-
-static void insert_newline(unsigned int line_offset)
-{
-	//TODO add fix for scrolling
-	unsigned int lines_to_end = (buffer.buffer_lines - 1) - line_offset;
-	unsigned int chars_to_end = (strlen(buffer.buf[line_offset]) + 1) - col ;
-
-	// TODO fix this
-	// TODO check allocation errors (out-of-memory)
-	if (!buffer.buf)
-		buffer.buf[buffer.buffer_lines] = malloc(sizeof(char) * BUFFER_COLUMNS);
-
-	unsigned int i;
-	for (i = 0; i < lines_to_end; i++) {
-		strcpy(buffer.buf[buffer.buffer_lines - i], buffer.buf[buffer.buffer_lines - i - 1]);
-	}
-
-	buffer.buffer_lines++;
-
-	strncpy(&buffer.buf[line_offset + 1][0], &buffer.buf[line_offset][col], chars_to_end);
-	buffer.buf[line_offset][col] = '\n';
-	buffer.buf[line_offset][col + 1] = '\0';
-}
-
-static void remove_char(char *str, char remove) 
-{
-	char *src, *dst;
-	for (src = dst = str; *src != '\0'; src++) {
-		*dst = *src;
-		if (*dst != remove) 
-			dst++;
-	}
-	*dst = '\0';
-}
-
-static void remove_char_at(char *src, int index)
-{
-	int i, len;
-	len = strlen(src);
-	for (i = index; i <= len; i++) {
-		src[i] = src[i + 1];
-	}
-}
-
-static void remove_newline(unsigned int line_offset)
-{
-	unsigned int i;
-	unsigned int lines_to_end = (buffer.buffer_lines - 1) - line_offset;
-
-	remove_char(buffer.buf[line_offset - 1], '\n');
-	strcat(buffer.buf[line_offset - 1], buffer.buf[line_offset]);
-
-	// TODO confirm this
-	for (i = 0; i < lines_to_end; i++) {
-		strcpy(buffer.buf[line_offset + i], buffer.buf[line_offset + i + 1]);
-	}
-
-	free(buffer.buf[buffer.buffer_lines - 1]);
-	buffer.buffer_lines--;
 }
 
 static void process_input(int read)
@@ -381,7 +215,8 @@ static void process_input(int read)
 		save_to_file();
 		break;			
 	case CTRL('x'):
-		save_and_exit();
+		save_to_file();
+		clear_and_exit();
 		break;			
 	case KEY_F(1):
 		break;

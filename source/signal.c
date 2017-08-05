@@ -4,7 +4,6 @@
 
 #include "tiper.h"
 
-
 static void signal_handler(int signo)
 {
 	/* TODO switch Case */
@@ -40,3 +39,5 @@ void init_signals()
 		exit(EXIT_FAILURE);
 	}
 }
+
+

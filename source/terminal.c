@@ -1,10 +1,10 @@
 /*
-*
+* terminal.c
 */
-
 
 #include "tiper.h"
 
+#define CLEAR_SCREEN_ANSI "\e[2J\e[H"
 
 void print_menu()
 {
@@ -15,12 +15,6 @@ void print_menu()
 	mvprintw(maxrow + 2, maxcol / 2, "Save: Ctrl+i");
 	mvprintw(maxrow + 1,  (maxcol * 3.0) / 4, "Exit: Ctrl+c");
 	attroff(A_REVERSE);
-}
-
-void clear_screen()
-{
-	const char* CLEAR_SCREEN_ANSI =  "\e[2J\e[H";
-	write(STDOUT_FILENO, CLEAR_SCREEN_ANSI, 7);
 }
 
 void init_console()
@@ -36,3 +30,17 @@ void init_console()
 	refresh();
 }
 
+void clear_screen()
+{
+	const char* clear_screen = CLEAR_SCREEN_ANSI;
+	write(STDOUT_FILENO, clear_screen, 7);
+}
+
+void clear_and_exit()
+{
+	erase();
+	refresh();
+	endwin();
+	clear_screen();
+	exit(EXIT_SUCCESS);
+}
