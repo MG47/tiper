@@ -33,45 +33,6 @@ static void print_version()
 	printf("Tiper version:%d.%d\n", TIPER_VERSION, TIPER_REVISION);
 }
 
-static void print_cursor_info()
-{
-	unsigned int page_offset = (current_page * maxrow);
-	unsigned int line_offset = page_offset + row;
-	mvprintw(maxrow + 1, 0, "Page %u: %u (%u), %u", current_page, line_offset, row, col);
-	mvprintw(maxrow + 2, 0, "MAX LINES: %u", buffer.buffer_lines - 1);
-	refresh();
-}
-
-void print_contents(unsigned int page_no) 
-{
-	clear();
-	unsigned int i;
-	unsigned int page_offset = page_no * maxrow;
-	unsigned int line_offset = page_offset % maxrow;
-
-	for (i = line_offset; i < (line_offset + maxrow); i++) {
-		//TODO bounds check 
-		if (!((i + page_offset) < buffer.buffer_lines))
-			break;
-		mvprintw(i, 0, "%s", buffer.buf[i + page_offset]);
-	}
-	refresh();
-	print_menu();
-}
-
-
-static void insert_char_at(char *str, int index, char ch)
-{
-	char *src;
-	int i;
-
-	src = str;
-	src[strlen(src) + 1] = '\0';
-	for (i = strlen(src); i > index; i--)
-		src[i] = src[i - 1];
-	src[index] = ch;
-}
-
 static void process_input(int read)
 {
 	unsigned int page_offset = (current_page * maxrow);

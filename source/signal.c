@@ -8,11 +8,7 @@ static void signal_handler(int signo)
 {
 	/* TODO switch Case */
 	if (signo == SIGINT) {
-		erase();
-		refresh();
-		endwin();
-		clear_screen();
-		exit(EXIT_FAILURE);
+		clear_and_exit();
 	}
 
 	if (signo = SIGWINCH) {

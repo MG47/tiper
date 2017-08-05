@@ -41,9 +41,9 @@ extern FILE *stream;
 void init_signals();
 
 /* Terminal functions - terminal.c */
-void clear_screen();
+void print_cursor_info();
+void print_contents(unsigned int page_no) ;
 void init_console();
-void print_menu();
 void clear_and_exit();
 
 /* File I/O functions - file_ops.c*/
@@ -52,6 +52,7 @@ FILE *parse_file(char *filename);
 void save_to_file();
 
 /* String handling functions - string_ops.c*/
+void insert_char_at(char *str, int index, char ch);
 void insert_newline(unsigned int line_offset);
 void remove_char(char *str, char remove);
 void remove_char_at(char *src, int index);

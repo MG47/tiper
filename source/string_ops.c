@@ -4,6 +4,18 @@
 
 #include "tiper.h"
 
+void insert_char_at(char *str, int index, char ch)
+{
+	char *src;
+	int i;
+
+	src = str;
+	src[strlen(src) + 1] = '\0';
+	for (i = strlen(src); i > index; i--)
+		src[i] = src[i - 1];
+	src[index] = ch;
+}
+
 void insert_newline(unsigned int line_offset)
 {
 	//TODO add fix for scrolling
