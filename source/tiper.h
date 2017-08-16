@@ -1,5 +1,5 @@
 /*
-* Tiper.h
+* tiper.h
 */
 #ifndef TIPER_H
 #define TIPER_H
@@ -25,7 +25,6 @@ struct file_buffer {
 	unsigned int buffer_lines;
 };
 
-
 /* Terminal variables */
 extern unsigned int maxrow, maxcol;
 extern unsigned int row, col;
@@ -34,8 +33,6 @@ extern unsigned int current_page;
 /* File variables */
 extern struct file_buffer buffer;
 extern FILE *stream;
-
-
 
 /* Signal handling functions - signal.c */
 void init_signals();

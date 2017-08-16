@@ -6,17 +6,14 @@
 
 #define DEBUG_ON
 
-
 //TODO Make a struct for these
 unsigned int maxrow, maxcol;
 unsigned int row, col;
 unsigned int current_page;
 
-
 #ifndef CTRL
 #define CTRL(x) ((x) & 0x1f)
 #endif
-
 
 static void usage()
 {
